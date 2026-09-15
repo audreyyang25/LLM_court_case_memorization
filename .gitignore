@@ -1,0 +1,17 @@
+__pycache__/
+*.pyc
+.DS_Store
+.env
+
+# LaTeX build products (main.tex and refs.bib are tracked; these are not)
+paper/*.aux
+paper/*.bbl
+paper/*.blg
+paper/*.log
+paper/*.out
+paper/*.pdf
+paper/*.synctex.gz
+
+# ICLR style files are not ours to redistribute -- download from the template.
+paper/iclr2026_conference.sty
+paper/iclr2026_conference.bst

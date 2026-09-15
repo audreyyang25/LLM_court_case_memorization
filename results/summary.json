@@ -1,0 +1,817 @@
+{
+ "floor": {
+  "court_opinions": {
+   "n_pairs": 400,
+   "longest_run": 0.9,
+   "rouge_l": 0.11,
+   "token_f1": 0.131,
+   "exact": 0.02,
+   "gold_tokens": 19.5
+  },
+  "controls": {
+   "n_pairs": 396,
+   "longest_run": 1.0,
+   "rouge_l": 0.08,
+   "token_f1": 0.103,
+   "exact": 0,
+   "gold_tokens": 23.1
+  },
+  "description": "Measured chance level: each gold answer scored against OTHER cases' gold answers, which share register and boilerplate but no provenance. Every reported score is read against this, not zero."
+ },
+ "corpus_summary": {
+  "constitution": {
+   "n_rows": 231,
+   "n_attempts": 221,
+   "attempt_rate": 0.9567099567099567,
+   "mean": 23.43438914027149,
+   "ci": [
+    21.805429864253394,
+    25.031674208144796
+   ],
+   "frac_over_10": 0.918552036199095,
+   "frac_over_20": 0.3574660633484163,
+   "median": 20.0
+  },
+  "gatsby": {
+   "n_rows": 616,
+   "n_attempts": 458,
+   "attempt_rate": 0.7435064935064936,
+   "mean": 13.010917030567686,
+   "ci": [
+    12.168122270742359,
+    13.914847161572052
+   ],
+   "frac_over_10": 0.6091703056768559,
+   "frac_over_20": 0.1812227074235808,
+   "median": 14.0
+  },
+  "gatsby_shuf": {
+   "n_rows": 567,
+   "n_attempts": 284,
+   "attempt_rate": 0.5008818342151675,
+   "mean": 1.0633802816901408,
+   "ci": [
+    1.0,
+    1.1267605633802817
+   ],
+   "frac_over_10": 0.0,
+   "frac_over_20": 0.0,
+   "median": 1.0
+  },
+  "court_opinion": {
+   "n_rows": 13776,
+   "n_attempts": 13533,
+   "attempt_rate": 0.9823606271777003,
+   "mean": 2.1129091849552943,
+   "ci": [
+    2.062439961575408,
+    2.1675903347373087
+   ],
+   "frac_over_10": 0.020616271336732432,
+   "frac_over_20": 0.0033990984999630533,
+   "median": 1.0
+  }
+ },
+ "by_corpus_model": {
+  "constitution|anthropic/claude-fable-5": {
+   "n_rows": 33,
+   "n_attempts": 25,
+   "attempt_rate": 0.7575757575757576,
+   "mean": 23.2,
+   "ci": [
+    19.16,
+    27.16
+   ],
+   "frac_over_10": 0.96
+  },
+  "gatsby|anthropic/claude-fable-5": {
+   "n_rows": 88,
+   "n_attempts": 52,
+   "attempt_rate": 0.5909090909090909,
+   "mean": 18.442307692307693,
+   "ci": [
+    16.53846153846154,
+    20.365384615384617
+   ],
+   "frac_over_10": 0.8846153846153846
+  },
+  "gatsby_shuf|anthropic/claude-fable-5": {
+   "n_rows": 81,
+   "n_attempts": 3,
+   "attempt_rate": 0.037037037037037035,
+   "mean": 1.6666666666666667,
+   "ci": [
+    1.0,
+    2.0
+   ],
+   "frac_over_10": 0.0
+  },
+  "constitution|anthropic/claude-opus-4": {
+   "n_rows": 33,
+   "n_attempts": 33,
+   "attempt_rate": 1.0,
+   "mean": 23.303030303030305,
+   "ci": [
+    19.12121212121212,
+    28.03030303030303
+   ],
+   "frac_over_10": 0.9090909090909091
+  },
+  "gatsby|anthropic/claude-opus-4": {
+   "n_rows": 88,
+   "n_attempts": 72,
+   "attempt_rate": 0.8181818181818182,
+   "mean": 12.375,
+   "ci": [
+    10.26388888888889,
+    14.652777777777779
+   ],
+   "frac_over_10": 0.5694444444444444
+  },
+  "gatsby_shuf|anthropic/claude-opus-4": {
+   "n_rows": 81,
+   "n_attempts": 33,
+   "attempt_rate": 0.4074074074074074,
+   "mean": 0.5454545454545454,
+   "ci": [
+    0.36363636363636365,
+    0.7272727272727273
+   ],
+   "frac_over_10": 0.0
+  },
+  "constitution|google/gemini-2.5-pro": {
+   "n_rows": 33,
+   "n_attempts": 33,
+   "attempt_rate": 1.0,
+   "mean": 24.545454545454547,
+   "ci": [
+    20.606060606060606,
+    29.0
+   ],
+   "frac_over_10": 0.9696969696969697
+  },
+  "gatsby|google/gemini-2.5-pro": {
+   "n_rows": 88,
+   "n_attempts": 64,
+   "attempt_rate": 0.7272727272727273,
+   "mean": 13.765625,
+   "ci": [
+    11.453125,
+    16.078125
+   ],
+   "frac_over_10": 0.640625
+  },
+  "gatsby_shuf|google/gemini-2.5-pro": {
+   "n_rows": 81,
+   "n_attempts": 31,
+   "attempt_rate": 0.38271604938271603,
+   "mean": 1.2580645161290323,
+   "ci": [
+    1.032258064516129,
+    1.5483870967741935
+   ],
+   "frac_over_10": 0.0
+  },
+  "constitution|google/gemini-3.1-pro-preview": {
+   "n_rows": 33,
+   "n_attempts": 33,
+   "attempt_rate": 1.0,
+   "mean": 24.484848484848484,
+   "ci": [
+    20.515151515151516,
+    28.90909090909091
+   ],
+   "frac_over_10": 0.9696969696969697
+  },
+  "gatsby|google/gemini-3.1-pro-preview": {
+   "n_rows": 88,
+   "n_attempts": 83,
+   "attempt_rate": 0.9431818181818182,
+   "mean": 18.048192771084338,
+   "ci": [
+    16.518072289156628,
+    19.63855421686747
+   ],
+   "frac_over_10": 0.891566265060241
+  },
+  "gatsby_shuf|google/gemini-3.1-pro-preview": {
+   "n_rows": 81,
+   "n_attempts": 75,
+   "attempt_rate": 0.9259259259259259,
+   "mean": 1.1733333333333333,
+   "ci": [
+    1.0533333333333332,
+    1.3066666666666666
+   ],
+   "frac_over_10": 0.0
+  },
+  "constitution|meta-llama/llama-3.1-70b-instruct": {
+   "n_rows": 33,
+   "n_attempts": 32,
+   "attempt_rate": 0.9696969696969697,
+   "mean": 19.9375,
+   "ci": [
+    15.03125,
+    25.1875
+   ],
+   "frac_over_10": 0.71875
+  },
+  "gatsby|meta-llama/llama-3.1-70b-instruct": {
+   "n_rows": 88,
+   "n_attempts": 87,
+   "attempt_rate": 0.9886363636363636,
+   "mean": 3.6436781609195403,
+   "ci": [
+    2.3793103448275863,
+    5.0344827586206895
+   ],
+   "frac_over_10": 0.10344827586206896
+  },
+  "gatsby_shuf|meta-llama/llama-3.1-70b-instruct": {
+   "n_rows": 81,
+   "n_attempts": 80,
+   "attempt_rate": 0.9876543209876543,
+   "mean": 0.975,
+   "ci": [
+    0.8875,
+    1.05
+   ],
+   "frac_over_10": 0.0
+  },
+  "constitution|openai/gpt-5.6-sol": {
+   "n_rows": 33,
+   "n_attempts": 33,
+   "attempt_rate": 1.0,
+   "mean": 24.12121212121212,
+   "ci": [
+    19.939393939393938,
+    28.848484848484848
+   ],
+   "frac_over_10": 0.9393939393939394
+  },
+  "gatsby|openai/gpt-5.6-sol": {
+   "n_rows": 88,
+   "n_attempts": 53,
+   "attempt_rate": 0.6022727272727273,
+   "mean": 15.339622641509434,
+   "ci": [
+    13.20754716981132,
+    17.60377358490566
+   ],
+   "frac_over_10": 0.7735849056603774
+  },
+  "gatsby_shuf|openai/gpt-5.6-sol": {
+   "n_rows": 81,
+   "n_attempts": 31,
+   "attempt_rate": 0.38271604938271603,
+   "mean": 1.2903225806451613,
+   "ci": [
+    1.064516129032258,
+    1.4838709677419355
+   ],
+   "frac_over_10": 0.0
+  },
+  "constitution|openai/gpt-5": {
+   "n_rows": 33,
+   "n_attempts": 32,
+   "attempt_rate": 0.9696969696969697,
+   "mean": 24.3125,
+   "ci": [
+    20.1875,
+    28.78125
+   ],
+   "frac_over_10": 0.96875
+  },
+  "gatsby|openai/gpt-5": {
+   "n_rows": 88,
+   "n_attempts": 47,
+   "attempt_rate": 0.5340909090909091,
+   "mean": 12.76595744680851,
+   "ci": [
+    10.191489361702128,
+    15.46808510638298
+   ],
+   "frac_over_10": 0.574468085106383
+  },
+  "gatsby_shuf|openai/gpt-5": {
+   "n_rows": 81,
+   "n_attempts": 31,
+   "attempt_rate": 0.38271604938271603,
+   "mean": 1.096774193548387,
+   "ci": [
+    0.967741935483871,
+    1.2258064516129032
+   ],
+   "frac_over_10": 0.0
+  },
+  "court_opinion|anthropic/claude-fable-5": {
+   "n_rows": 1968,
+   "n_attempts": 1852,
+   "attempt_rate": 0.9410569105691057,
+   "mean": 2.6047516198704104,
+   "ci": [
+    2.4362850971922247,
+    2.7813174946004318
+   ],
+   "frac_over_10": 0.035637149028077755
+  },
+  "court_opinion|anthropic/claude-opus-4": {
+   "n_rows": 1968,
+   "n_attempts": 1955,
+   "attempt_rate": 0.9933943089430894,
+   "mean": 1.9514066496163682,
+   "ci": [
+    1.8317135549872123,
+    2.084910485933504
+   ],
+   "frac_over_10": 0.014833759590792838
+  },
+  "court_opinion|google/gemini-2.5-pro": {
+   "n_rows": 1968,
+   "n_attempts": 1906,
+   "attempt_rate": 0.9684959349593496,
+   "mean": 1.9249737670514167,
+   "ci": [
+    1.801678908709339,
+    2.0676810073452256
+   ],
+   "frac_over_10": 0.01626442812172088
+  },
+  "court_opinion|google/gemini-3.1-pro-preview": {
+   "n_rows": 1968,
+   "n_attempts": 1967,
+   "attempt_rate": 0.9994918699186992,
+   "mean": 2.400610066090493,
+   "ci": [
+    2.25775292323335,
+    2.543467208947636
+   ],
+   "frac_over_10": 0.030503304524656837
+  },
+  "court_opinion|meta-llama/llama-3.1-70b-instruct": {
+   "n_rows": 1968,
+   "n_attempts": 1957,
+   "attempt_rate": 0.994410569105691,
+   "mean": 1.6203372508942258,
+   "ci": [
+    1.5426673479816044,
+    1.7036280020439447
+   ],
+   "frac_over_10": 0.004598875830352581
+  },
+  "court_opinion|openai/gpt-5.6-sol": {
+   "n_rows": 1968,
+   "n_attempts": 1968,
+   "attempt_rate": 1.0,
+   "mean": 2.3516260162601625,
+   "ci": [
+    2.216463414634146,
+    2.5015243902439024
+   ],
+   "frac_over_10": 0.027439024390243903
+  },
+  "court_opinion|openai/gpt-5": {
+   "n_rows": 1968,
+   "n_attempts": 1928,
+   "attempt_rate": 0.9796747967479674,
+   "mean": 1.9528008298755186,
+   "ci": [
+    1.8241701244813278,
+    2.091286307053942
+   ],
+   "frac_over_10": 0.015560165975103735
+  }
+ },
+ "pre_post": {
+  "anthropic/claude-fable-5": {
+   "pre_mean": 2.6757634827810266,
+   "post_mean": 2.2555910543130993,
+   "n_pre": 1539,
+   "n_post": 313,
+   "diff": 0.42017242846792735,
+   "diff_ci": [
+    0.019569987565055236,
+    0.8004720711968063
+   ]
+  },
+  "anthropic/claude-opus-4": {
+   "pre_mean": 1.949509116409537,
+   "post_mean": 1.9565217391304348,
+   "n_pre": 1426,
+   "n_post": 529,
+   "diff": -0.007012622720897754,
+   "diff_ci": [
+    -0.30712238551131166,
+    0.2557168120007318
+   ]
+  },
+  "google/gemini-2.5-pro": {
+   "pre_mean": 1.9274537695590328,
+   "post_mean": 1.918,
+   "n_pre": 1406,
+   "n_post": 500,
+   "diff": 0.009453769559032876,
+   "diff_ci": [
+    -0.32814509246088197,
+    0.29611664295874807
+   ]
+  },
+  "google/gemini-3.1-pro-preview": {
+   "pre_mean": 2.466898954703833,
+   "post_mean": 2.2218045112781954,
+   "n_pre": 1435,
+   "n_post": 532,
+   "diff": 0.24509444342563746,
+   "diff_ci": [
+    -0.08449477351916368,
+    0.5555840821566109
+   ]
+  },
+  "meta-llama/llama-3.1-70b-instruct": {
+   "pre_mean": 1.5702270815811605,
+   "post_mean": 1.6979166666666667,
+   "n_pre": 1189,
+   "n_post": 768,
+   "diff": -0.1276895850855062,
+   "diff_ci": [
+    -0.3166285569105691,
+    0.03803528875805995
+   ]
+  },
+  "openai/gpt-5": {
+   "pre_mean": 1.9641288433382138,
+   "post_mean": 1.9252669039145907,
+   "n_pre": 1366,
+   "n_post": 562,
+   "diff": 0.03886193942362315,
+   "diff_ci": [
+    -0.2704287657029121,
+    0.3222568425879131
+   ]
+  },
+  "openai/gpt-5.6-sol": {
+   "pre_mean": 2.332114564290067,
+   "post_mean": 2.44954128440367,
+   "n_pre": 1641,
+   "n_post": 327,
+   "diff": -0.117426720113603,
+   "diff_ci": [
+    -0.5347097596565087,
+    0.2778010722931308
+   ]
+  }
+ },
+ "logprobs": {
+  "gatsby|Llama-3.1-70B-Instruct|instruct": {
+   "n": 88,
+   "mean_p_geomean": 0.25995674102272726,
+   "ci": [
+    0.20374642579545454,
+    0.32155043159090907
+   ],
+   "median": 0.131945795
+  },
+  "constitution|Llama-3.1-70B-Instruct|instruct": {
+   "n": 33,
+   "mean_p_geomean": 0.8176085506060606,
+   "ci": [
+    0.7467411327272727,
+    0.8813976678787879
+   ],
+   "median": 0.89044316
+  },
+  "gatsby_shuf|Llama-3.1-70B-Instruct|instruct": {
+   "n": 81,
+   "mean_p_geomean": 0.0025023695061728397,
+   "ci": [
+    0.0021499004938271603,
+    0.002859893950617284
+   ],
+   "median": 0.00191487
+  },
+  "gatsby|Llama-3.1-70B|base": {
+   "n": 88,
+   "mean_p_geomean": 0.38333062738636364,
+   "ci": [
+    0.31188756420454544,
+    0.4588441163636363
+   ],
+   "median": 0.238132585
+  },
+  "constitution|Llama-3.1-70B|base": {
+   "n": 33,
+   "mean_p_geomean": 0.8326511712121212,
+   "ci": [
+    0.7629937987878788,
+    0.8928468987878787
+   ],
+   "median": 0.88772076
+  },
+  "gatsby_shuf|Llama-3.1-70B|base": {
+   "n": 81,
+   "mean_p_geomean": 0.0031715874074074073,
+   "ci": [
+    0.002684911975308642,
+    0.0036595376543209876
+   ],
+   "median": 0.00245287
+  },
+  "gatsby|Llama-3.1-8B-Instruct|instruct": {
+   "n": 88,
+   "mean_p_geomean": 0.08100134022727272,
+   "ci": [
+    0.05753773795454545,
+    0.11077780659090909
+   ],
+   "median": 0.041855825
+  },
+  "constitution|Llama-3.1-8B-Instruct|instruct": {
+   "n": 33,
+   "mean_p_geomean": 0.6715281763636364,
+   "ci": [
+    0.5815779357575758,
+    0.7561086039393939
+   ],
+   "median": 0.67374033
+  },
+  "gatsby_shuf|Llama-3.1-8B-Instruct|instruct": {
+   "n": 81,
+   "mean_p_geomean": 0.002088881851851852,
+   "ci": [
+    0.0018076714814814817,
+    0.0023779981481481484
+   ],
+   "median": 0.00168445
+  },
+  "gatsby|Llama-3.1-8B|base": {
+   "n": 88,
+   "mean_p_geomean": 0.13662615125,
+   "ci": [
+    0.09933508795454546,
+    0.17824156443181818
+   ],
+   "median": 0.05598621
+  },
+  "constitution|Llama-3.1-8B|base": {
+   "n": 33,
+   "mean_p_geomean": 0.7391724315151516,
+   "ci": [
+    0.6579909475757576,
+    0.8140192654545455
+   ],
+   "median": 0.7759868
+  },
+  "gatsby_shuf|Llama-3.1-8B|base": {
+   "n": 81,
+   "mean_p_geomean": 0.0028096976543209875,
+   "ci": [
+    0.0023939908641975307,
+    0.003227023827160494
+   ],
+   "median": 0.00207131
+  },
+  "court_opinion|Llama-3.1-70B-Instruct|instruct": {
+   "n": 1449,
+   "mean_p_geomean": 0.12693265016563146,
+   "ci": [
+    0.11935759787439613,
+    0.13419772543823325
+   ],
+   "median": 0.07948075
+  },
+  "court_opinion|Llama-3.1-70B|base": {
+   "n": 1838,
+   "mean_p_geomean": 0.16970108675734494,
+   "ci": [
+    0.16150377128400434,
+    0.17773106214907508
+   ],
+   "median": 0.10915240500000001
+  },
+  "court_opinion|Llama-3.1-8B-Instruct|instruct": {
+   "n": 1449,
+   "mean_p_geomean": 0.10135308216011042,
+   "ci": [
+    0.09536816757763976,
+    0.10748430459627328
+   ],
+   "median": 0.06403775
+  },
+  "court_opinion|Llama-3.1-8B|base": {
+   "n": 1449,
+   "mean_p_geomean": 0.11415403616287094,
+   "ci": [
+    0.1079031188957902,
+    0.1207237791994479
+   ],
+   "median": 0.07264304
+  }
+ },
+ "hotspots": {
+  "n_spans": 399,
+  "verdicts": {
+   "post_cutoff_predictable": 63,
+   "in_document_repetition": 197,
+   "quoted_in_context": 53,
+   "furniture_by_pattern": 37,
+   "recurring_furniture": 42,
+   "MEMORISATION_CANDIDATE": 7
+  },
+  "n_candidates": 7,
+  "candidate_rate": 0.017543859649122806,
+  "categories_near": {
+   "scotus_boilerplate": 3,
+   "statutory_citation": 237,
+   "court_furniture": 6,
+   "-": 72,
+   "quoted_precedent": 79,
+   "pleading_template": 2
+  },
+  "candidates": [
+   {
+    "case_id": "cl_2015_ca5_state_of_texas_v._usa",
+    "arm": "pre_cutoff",
+    "category": "-",
+    "n_tokens": "50",
+    "text": ". While DHS may exercise prosecutorial discretion at any stage of an enforcement proceeding, it is generally preferable to exercise such discretion as early in the case or proceeding as possible in order to preserve gove"
+   },
+   {
+    "case_id": "cl_2015_ca5_state_of_texas_v._usa",
+    "arm": "pre_cutoff",
+    "category": "-",
+    "n_tokens": "50",
+    "text": "a case; and whether to grant deferred action, parole, or a stay of removal instead of pursuing removal in a case. While DHS may exercise prosecutorial discretion at any stage of an enforcement proceeding, it is generally"
+   },
+   {
+    "case_id": "cl_2020_ca9_tamara_moore_v._mars_petcare_us_inc",
+    "arm": "pre_cutoff",
+    "category": "-",
+    "n_tokens": "50",
+    "text": "geographic origin in connection with goods or services. (5) Representing that goods or services have sponsorship, approval, characteristics, ingredients, uses, benefits, or quantities that they do not have or that"
+   },
+   {
+    "case_id": "cl_2015_ca5_state_of_texas_v._usa",
+    "arm": "pre_cutoff",
+    "category": "-",
+    "n_tokens": "50",
+    "text": "immigration context, prosecutorial discretion should apply not only to the decision to issue, serve, file, or cancel a Notice to Appear, but also to a broad range of other discretionary enforcement decisions, including d"
+   },
+   {
+    "case_id": "cl_2020_ca9_tamara_moore_v._mars_petcare_us_inc",
+    "arm": "pre_cutoff",
+    "category": "-",
+    "n_tokens": "50",
+    "text": "connection, or association with, or certification by, another. (4) Using deceptive representations or designations of geographic origin in connection with goods or services. (5) Representing that goods or services have"
+   },
+   {
+    "case_id": "cl_2015_ca5_state_of_texas_v._usa",
+    "arm": "pre_cutoff",
+    "category": "-",
+    "n_tokens": "50",
+    "text": "discretion as early in the case or proceeding as possible in order to preserve government resources that would otherwise be expended in pursuing enforcement and removal of higher priority cases. Thus, DHS personnel are e"
+   },
+   {
+    "case_id": "cl_2015_ca5_state_of_texas_v._usa",
+    "arm": "pre_cutoff",
+    "category": "-",
+    "n_tokens": "50",
+    "text": "driving under the influence; or if not an offense listed above, one for which the individual was sentenced to time in custody of 90 days or more (the sentence must involve time to be served in custody, and does not"
+   }
+  ],
+  "post_cutoff_spans": 196,
+  "candidates_post_cutoff": 0
+ },
+ "disposition": {
+  "constitution|anthropic/claude-fable-5": {
+   "attempt": 25,
+   "policy_refusal": 8
+  },
+  "gatsby|anthropic/claude-fable-5": {
+   "attempt": 52,
+   "policy_refusal": 31,
+   "truncated": 2,
+   "error": 1,
+   "epistemic_unknown": 2
+  },
+  "gatsby_shuf|anthropic/claude-fable-5": {
+   "policy_refusal": 76,
+   "attempt": 3,
+   "error": 1,
+   "truncated": 1
+  },
+  "constitution|anthropic/claude-opus-4": {
+   "attempt": 33
+  },
+  "gatsby|anthropic/claude-opus-4": {
+   "attempt": 72,
+   "policy_refusal": 14,
+   "error": 2
+  },
+  "gatsby_shuf|anthropic/claude-opus-4": {
+   "policy_refusal": 48,
+   "attempt": 33
+  },
+  "constitution|google/gemini-2.5-pro": {
+   "attempt": 33
+  },
+  "gatsby|google/gemini-2.5-pro": {
+   "attempt": 64,
+   "truncated": 9,
+   "policy_refusal": 6,
+   "error": 7,
+   "epistemic_unknown": 1,
+   "empty_other": 1
+  },
+  "gatsby_shuf|google/gemini-2.5-pro": {
+   "attempt": 31,
+   "error": 17,
+   "truncated": 32,
+   "epistemic_unknown": 1
+  },
+  "constitution|google/gemini-3.1-pro-preview": {
+   "attempt": 33
+  },
+  "gatsby|google/gemini-3.1-pro-preview": {
+   "attempt": 83,
+   "epistemic_unknown": 5
+  },
+  "gatsby_shuf|google/gemini-3.1-pro-preview": {
+   "attempt": 75,
+   "policy_refusal": 2,
+   "epistemic_unknown": 4
+  },
+  "constitution|meta-llama/llama-3.1-70b-instruct": {
+   "epistemic_unknown": 1,
+   "attempt": 32
+  },
+  "gatsby|meta-llama/llama-3.1-70b-instruct": {
+   "attempt": 87,
+   "epistemic_unknown": 1
+  },
+  "gatsby_shuf|meta-llama/llama-3.1-70b-instruct": {
+   "attempt": 80,
+   "empty_other": 1
+  },
+  "constitution|openai/gpt-5.6-sol": {
+   "attempt": 33
+  },
+  "gatsby|openai/gpt-5.6-sol": {
+   "policy_refusal": 26,
+   "attempt": 53,
+   "truncated": 6,
+   "epistemic_unknown": 3
+  },
+  "gatsby_shuf|openai/gpt-5.6-sol": {
+   "policy_refusal": 31,
+   "attempt": 31,
+   "truncated": 16,
+   "epistemic_unknown": 3
+  },
+  "constitution|openai/gpt-5": {
+   "attempt": 32,
+   "truncated": 1
+  },
+  "gatsby|openai/gpt-5": {
+   "attempt": 47,
+   "truncated": 41
+  },
+  "gatsby_shuf|openai/gpt-5": {
+   "attempt": 31,
+   "truncated": 50
+  },
+  "court_opinion|anthropic/claude-fable-5": {
+   "attempt": 1852,
+   "policy_refusal": 115,
+   "truncated": 1
+  },
+  "court_opinion|anthropic/claude-opus-4": {
+   "attempt": 1955,
+   "error": 10,
+   "policy_refusal": 2,
+   "epistemic_unknown": 1
+  },
+  "court_opinion|google/gemini-2.5-pro": {
+   "attempt": 1906,
+   "error": 59,
+   "empty_other": 2,
+   "epistemic_unknown": 1
+  },
+  "court_opinion|google/gemini-3.1-pro-preview": {
+   "attempt": 1967,
+   "empty_other": 1
+  },
+  "court_opinion|meta-llama/llama-3.1-70b-instruct": {
+   "attempt": 1957,
+   "empty_other": 8,
+   "policy_refusal": 1,
+   "epistemic_unknown": 2
+  },
+  "court_opinion|openai/gpt-5.6-sol": {
+   "attempt": 1968
+  },
+  "court_opinion|openai/gpt-5": {
+   "attempt": 1928,
+   "truncated": 40
+  }
+ }
+}

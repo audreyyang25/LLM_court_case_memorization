@@ -1,0 +1,19 @@
+{
+ "court_opinions": {
+  "n_pairs": 400,
+  "longest_run": 0.9,
+  "rouge_l": 0.11,
+  "token_f1": 0.131,
+  "exact": 0.02,
+  "gold_tokens": 19.5
+ },
+ "controls": {
+  "n_pairs": 396,
+  "longest_run": 1.0,
+  "rouge_l": 0.08,
+  "token_f1": 0.103,
+  "exact": 0,
+  "gold_tokens": 23.1
+ },
+ "description": "Measured chance level: each gold answer scored against OTHER cases' gold answers, which share register and boilerplate but no provenance. Every reported score is read against this, not zero."
+}
