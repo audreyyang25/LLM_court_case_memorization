@@ -2,11 +2,13 @@
 
 No. They remember the statutes quoted inside them.
 
-This repository reproduces every number and figure in `paper/main.tex`: a
+This repository holds the data, the analysis code and the figures behind a
 memorization audit of seven closed-weight models on 106 US federal court
-opinions, with a measured floor, two positive controls, a scrambled negative
-control, a pre/post-training-cutoff arm, a teacher-forced replication on open
-weights, and hand adjudication of the 399 highest-probability spans.
+opinions: a measured floor, two positive controls, a scrambled negative control,
+a pre/post-training-cutoff arm, a teacher-forced replication on open weights, and
+hand adjudication of the 399 highest-probability spans. The manuscript itself is
+maintained outside this repository; everything it reports is regenerated here by
+one command.
 
 | corpus | role | mean contiguous tokens | share above 10 |
 |---|---|---|---|
@@ -28,7 +30,8 @@ python -m src.run_all
 ```
 
 About ten seconds. No API key, no network, no GPU — the expensive stages are
-committed in `data/`. Writes `results/summary.json` and `results/figures/*.png`.
+committed in `data/`. Writes `results/summary.json` and `results/figures/*.png`,
+which are the five figures the paper uses.
 
 ```bash
 python -m src.run_all --no-figures     # numbers only, no matplotlib
@@ -50,9 +53,9 @@ prediction strings. It caught two real errors during development; see
 
 ## Self-contained
 
-`src/`, `data/`, `paper/` and `results/` have no dependency on any other
-project: `python -m src.run_all` regenerates every number and figure from the
-committed artifacts with numpy and matplotlib, and nothing else.
+`src/`, `data/` and `results/` have no dependency on any other project:
+`python -m src.run_all` regenerates every number and figure from the committed
+artifacts with numpy and matplotlib, and nothing else.
 
 Re-deriving those artifacts — re-probing new models, or building questions for
 new documents — needs the upstream harness, which is vendored in `vendor/`
@@ -63,14 +66,14 @@ point defaults to that copy, so `--upstream` is optional; pass a real
 records provenance, per-file hashes, and the single one-line path change applied
 to four of them.
 
-`results/` is committed on purpose, so a reader can check the paper's numbers
+`results/` is committed on purpose, so a reader can check the reported numbers
 without running anything at all.
 
 ### Three levels of reproduction
 
 | | command | needs |
 |---|---|---|
-| **reproduce the paper** | `python -m src.run_all` | nothing but numpy + matplotlib |
+| **reproduce the reported numbers** | `python -m src.run_all` | nothing but numpy + matplotlib |
 | **audit the measurement** | `python regenerate/verify.py` | nothing |
 | **rederive from scratch** | `regenerate/`, `vendor/` | an OpenRouter key; code is vendored |
 
@@ -86,25 +89,8 @@ src/
   figures.py  the five figures
   run_all.py  entry point
 regenerate/ rebuilding the artifacts from an upstream run, plus the verifier
-paper/      main.tex, appendix.tex, refs.bib
-results/    generated; committed so the paper's numbers are checkable without running anything
+results/    generated; committed so the numbers are checkable without running anything
 ```
-
-## Building the paper
-
-`paper/` needs two files from the ICLR author kit that are not redistributable
-and are therefore gitignored: `iclr2026_conference.sty` and
-`iclr2026_conference.bst`. **Both are required.** `\bibliographystyle{iclr2026_conference}`
-fails without the `.bst`, which produces an empty bibliography and `[?]` for
-every citation.
-
-```bash
-cd paper
-pdflatex main && bibtex main && pdflatex main && pdflatex main
-```
-
-The four passes are necessary: BibTeX runs against the `.aux` file the first
-pass writes, and the last two resolve citation and cross-reference numbers.
 
 ## The procedure
 
@@ -184,6 +170,17 @@ spans were classified one at a time. Seven survive as memorization candidates
 memorandum, statutory enumerations — not a court's own reasoning. Half the spans
 in the tail come from opinions filed *after* the training cutoff, which cannot
 have been memorized at all.
+
+## Uncertainty
+
+All intervals are seeded 2,000-draw percentile bootstraps that resample
+**documents**, not items. Twenty questions are drawn from each source document
+and share its text, so items within a document are not independent: on the court
+corpus the intraclass correlation by document is 0.057 at a mean cluster size of
+128, giving a design effect of 8.2 and an effective sample near 1,600 rather than
+13,533. Item-level resampling reports intervals about 2.7x too narrow. Both
+variants are computed in `src/stats.py` and both appear in
+`results/summary.json` as `ci` and `ci_item_level`.
 
 ## What this does not claim
 
