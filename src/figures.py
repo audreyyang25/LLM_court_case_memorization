@@ -6,9 +6,7 @@
   fig4_whitebox.png       teacher-forced replication on open weights
   fig5_hotspots.png       adjudication of the 399 highest-probability spans
 
-Palette is Okabe-Ito (colour-blind safe). Positive controls are blue, the
-negative control grey, the target orange -- held constant across every figure so
-the reader learns the coding once.
+Positive controls are blue, the negative control grey, the target orange.
 """
 
 from __future__ import annotations
@@ -22,8 +20,7 @@ import matplotlib.pyplot as plt
 
 from src import load, stats
 
-# Two shades of blue for the two positive controls -- same family, still
-# distinguishable when they sit side by side in the grouped bars of fig4.
+# Two shades of blue for the two positive controls
 C_POS = "#0072B2"      # positive control: heavily duplicated public text
 C_POS2 = "#56B4E9"     # positive control: memorized novel
 C_NEG = "#999999"      # negative control: same novel, order destroyed
@@ -92,8 +89,7 @@ def fig_corpus_ladder(bb, floor, out):
 def fig_distributions(bb, out):
     """Memorization is bimodal; the court-opinion distribution has no upper mode.
 
-    This is the figure the paper leans on hardest, because a mean cannot make
-    the distinction. "Half the items at 15 tokens" and "every item at 7.5" give
+    "Half the items at 15 tokens" and "every item at 7.5" give
     the same average and mean opposite things about whether a passage is carried
     in the weights.
     """

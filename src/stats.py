@@ -30,31 +30,87 @@ def _mean(xs):
     return statistics.mean(xs) if xs else float("nan")
 
 
-def bootstrap_ci(xs, n_boot=2000, seed=0, alpha=0.05):
-    """Percentile bootstrap CI for a mean. Seeded, so it reproduces exactly."""
+def bootstrap_ci(xs, n_boot=2000, seed=0, alpha=0.05, clusters=None):
+    """Percentile bootstrap CI for a mean. Seeded, so it reproduces exactly.
+
+    `clusters` is a parallel sequence of group ids -- here, the source document.
+    When given, the resampling draws whole DOCUMENTS with replacement rather
+    than individual items, which is the correct unit: several questions are
+    asked of each opinion and they share its text, so items within a document
+    are not independent draws.
+
+    The difference is not cosmetic. Measured on the court-opinion arm, the
+    intraclass correlation by document is 0.057 with a mean cluster size of 128,
+    giving a design effect near 8 -- an effective sample of roughly 1,600 rather
+    than 13,533. Item-level resampling therefore reports intervals about three
+    times too narrow. Every interval in the paper is the clustered one.
+    """
     import random
     xs = list(xs)
     if not xs:
         return (float("nan"), float("nan"))
     rng = random.Random(seed)
-    n = len(xs)
-    means = []
-    for _ in range(n_boot):
-        means.append(sum(xs[rng.randrange(n)] for _ in range(n)) / n)
+
+    if clusters is None:
+        n = len(xs)
+        means = [sum(xs[rng.randrange(n)] for _ in range(n)) / n
+                 for _ in range(n_boot)]
+    else:
+        grouped = defaultdict(list)
+        for x, c in zip(xs, clusters):
+            grouped[c].append(x)
+        blocks = list(grouped.values())
+        k = len(blocks)
+        means = []
+        for _ in range(n_boot):
+            tot = cnt = 0.0
+            for _ in range(k):
+                b = blocks[rng.randrange(k)]
+                tot += sum(b)
+                cnt += len(b)
+            means.append(tot / cnt if cnt else float("nan"))
+
     means.sort()
     lo = means[int(alpha / 2 * n_boot)]
     hi = means[int((1 - alpha / 2) * n_boot) - 1]
     return (lo, hi)
 
 
+def design_effect(xs, clusters):
+    """Variance inflation from clustering, and the effective sample size.
+
+    deff = 1 + (mean cluster size - 1) * ICC. Reported so a reader can see how
+    much the clustered intervals owe to the correlation rather than taking the
+    wider numbers on faith.
+    """
+    grouped = defaultdict(list)
+    for x, c in zip(xs, clusters):
+        grouped[c].append(x)
+    blocks = [b for b in grouped.values() if b]
+    n, k = sum(len(b) for b in blocks), len(blocks)
+    if k < 2 or n <= k:
+        return {"icc": float("nan"), "design_effect": float("nan"),
+                "n_items": n, "n_clusters": k, "n_effective": float("nan")}
+    grand = sum(sum(b) for b in blocks) / n
+    msb = sum(len(b) * (_mean(b) - grand) ** 2 for b in blocks) / (k - 1)
+    msw = sum(sum((x - _mean(b)) ** 2 for x in b) for b in blocks) / (n - k)
+    n0 = (n - sum(len(b) ** 2 for b in blocks) / n) / (k - 1)
+    icc = max(0.0, (msb - msw) / (msb + (n0 - 1) * msw)) if (msb + (n0 - 1) * msw) else 0.0
+    deff = 1 + (n / k - 1) * icc
+    return {"icc": icc, "design_effect": deff, "n_items": n, "n_clusters": k,
+            "n_effective": n / deff if deff else float("nan")}
+
+
 def by_corpus_model(rows, metric="longest_run"):
     """(corpus, model) -> {n_rows, n_attempts, attempt_rate, mean, ci, frac_over_10}."""
     g = defaultdict(list)
+    doc = defaultdict(list)
     tot = Counter()
     for r in rows:
         tot[(r["work"], r["model"])] += 1
         if r["is_attempt"]:
             g[(r["work"], r["model"])].append(r[metric])
+            doc[(r["work"], r["model"])].append(r["case_id"])
 
     out = {}
     for key, n_all in tot.items():
@@ -62,9 +118,10 @@ def by_corpus_model(rows, metric="longest_run"):
         out[key] = {
             "n_rows": n_all,
             "n_attempts": len(vals),
+            "n_documents": len(set(doc.get(key, []))),
             "attempt_rate": len(vals) / n_all if n_all else float("nan"),
             "mean": _mean(vals),
-            "ci": bootstrap_ci(vals),
+            "ci": bootstrap_ci(vals, clusters=doc.get(key)),
             "frac_over_10": (sum(1 for v in vals if v > 10) / len(vals)) if vals else float("nan"),
         }
     return out
@@ -73,23 +130,31 @@ def by_corpus_model(rows, metric="longest_run"):
 def corpus_summary(rows, metric="longest_run"):
     """Pooled over models, per corpus -- the headline table."""
     g = defaultdict(list)
+    doc = defaultdict(list)
     tot = Counter()
     for r in rows:
         tot[r["work"]] += 1
         if r["is_attempt"]:
             g[r["work"]].append(r[metric])
+            doc[r["work"]].append(r["case_id"])
 
     out = {}
     for w in CORPUS_ORDER:
         vals = g.get(w, [])
         if not vals:
             continue
+        de = design_effect(vals, doc[w])
         out[w] = {
             "n_rows": tot[w],
             "n_attempts": len(vals),
+            "n_documents": de["n_clusters"],
             "attempt_rate": len(vals) / tot[w],
             "mean": _mean(vals),
-            "ci": bootstrap_ci(vals),
+            "ci": bootstrap_ci(vals, clusters=doc[w]),
+            "ci_item_level": bootstrap_ci(vals),
+            "design_effect": de["design_effect"],
+            "icc": de["icc"],
+            "n_effective": de["n_effective"],
             "frac_over_10": sum(1 for v in vals if v > 10) / len(vals),
             "frac_over_20": sum(1 for v in vals if v > 20) / len(vals),
             "median": statistics.median(vals),
@@ -117,32 +182,44 @@ def pre_post(rows, metric="longest_run"):
     the case. If pre-cutoff recall does not exceed it, nothing was memorized that
     was not already reachable from the statutes and boilerplate quoted inside.
     """
-    g = defaultdict(list)
+    g = defaultdict(lambda: defaultdict(list))
     for r in rows:
         if r["work"] != "court_opinion" or not r["is_attempt"]:
             continue
         arm = "pre" if r["arm"] == "pre_cutoff" else "post"
-        g[(r["model"], arm)].append(r[metric])
+        g[(r["model"], arm)][r["case_id"]].append(r[metric])
 
     models = sorted({m for m, _ in g})
     out = {}
     for m in models:
-        pre, post = g.get((m, "pre"), []), g.get((m, "post"), [])
-        if not pre or not post:
+        pre_d, post_d = g.get((m, "pre"), {}), g.get((m, "post"), {})
+        if not pre_d or not post_d:
             continue
+        pre = [v for b in pre_d.values() for v in b]
+        post = [v for b in post_d.values() for v in b]
         diff = _mean(pre) - _mean(post)
-        # CI on the difference, resampling each arm independently.
+
+        # CI on the difference, resampling DOCUMENTS within each arm
+        # independently. Item-level resampling here reports intervals roughly
+        # 1.5x too narrow, because several questions share each opinion.
         import random
         rng = random.Random(1)
+        pb, qb = list(pre_d.values()), list(post_d.values())
         draws = []
         for _ in range(2000):
-            a = sum(pre[rng.randrange(len(pre))] for _ in range(len(pre))) / len(pre)
-            b = sum(post[rng.randrange(len(post))] for _ in range(len(post))) / len(post)
-            draws.append(a - b)
+            at = ac = bt = bc = 0.0
+            for _ in range(len(pb)):
+                blk = pb[rng.randrange(len(pb))]
+                at += sum(blk); ac += len(blk)
+            for _ in range(len(qb)):
+                blk = qb[rng.randrange(len(qb))]
+                bt += sum(blk); bc += len(blk)
+            draws.append((at / ac if ac else 0.0) - (bt / bc if bc else 0.0))
         draws.sort()
         out[m] = {
             "pre_mean": _mean(pre), "post_mean": _mean(post),
             "n_pre": len(pre), "n_post": len(post),
+            "n_pre_docs": len(pre_d), "n_post_docs": len(post_d),
             "diff": diff, "diff_ci": (draws[50], draws[-51]),
         }
     return out
@@ -201,10 +278,14 @@ def logprob_summary(lp_rows):
     reproduction, and the question is whether the model CARRIES the text.
     """
     g = defaultdict(list)
+    doc = defaultdict(list)
     for r in lp_rows:
-        g[(r["work"], r["model"], r["variant"])].append(r["p_geomean"])
+        k = (r["work"], r["model"], r["variant"])
+        g[k].append(r["p_geomean"])
+        doc[k].append(r["case_id"])
     return {k: {"n": len(v), "mean_p_geomean": _mean(v),
-                "ci": bootstrap_ci(v), "median": statistics.median(v)}
+                "ci": bootstrap_ci(v, clusters=doc[k]),
+                "median": statistics.median(v)}
             for k, v in g.items()}
 
 

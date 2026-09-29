@@ -15,3 +15,4 @@ paper/*.synctex.gz
 # ICLR style files are not ours to redistribute -- download from the template.
 paper/iclr2026_conference.sty
 paper/iclr2026_conference.bst
+archive/

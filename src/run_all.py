@@ -52,15 +52,21 @@ def main():
     print("  2. BLACK-BOX PROBE, POOLED OVER 7 MODELS")
     print("=" * 78)
     cs = stats.corpus_summary(bb)
-    print(f"  {'corpus':22s} {'role':17s} {'attempts':>9s} {'rate':>6s} "
-          f"{'mean':>6s} {'95% CI':>14s} {'>10 tok':>8s}")
+    print(f"  {'corpus':22s} {'role':17s} {'docs':>5s} {'attempts':>9s} {'rate':>6s} "
+          f"{'mean':>6s} {'95% CI':>14s} {'>10 tok':>8s} {'deff':>5s}")
     for w in load.CORPUS_ORDER:
         if w not in cs:
             continue
         d = cs[w]
         print(f"  {load.CORPUS_LABEL[w]:22s} {load.CORPUS_ROLE[w]:17s} "
-              f"{d['n_attempts']:9d} {d['attempt_rate']:6.0%} {d['mean']:6.2f} "
-              f"[{d['ci'][0]:5.2f},{d['ci'][1]:5.2f}] {d['frac_over_10']:8.1%}")
+              f"{d['n_documents']:5d} {d['n_attempts']:9d} {d['attempt_rate']:6.0%} "
+              f"{d['mean']:6.2f} [{d['ci'][0]:5.2f},{d['ci'][1]:5.2f}] "
+              f"{d['frac_over_10']:8.1%} {d['design_effect']:5.1f}")
+    print("\n  Intervals resample DOCUMENTS, not items: several questions are asked of")
+    print("  each source text and share its wording, so items are not independent.")
+    print(f"  On court opinions that inflates the interval {(cs['court_opinion']['ci'][1]-cs['court_opinion']['ci'][0]) / (cs['court_opinion']['ci_item_level'][1]-cs['court_opinion']['ci_item_level'][0]):.1f}x"
+          f" (ICC {cs['court_opinion']['icc']:.3f}, effective n"
+          f" {cs['court_opinion']['n_effective']:.0f} of {cs['court_opinion']['n_attempts']:,}).")
 
     print(f"\n  The instrument works: {cs['constitution']['mean']:.1f} contiguous tokens on the"
           f" Constitution,\n  {cs['gatsby']['mean']:.1f} on a memorized novel, and "
@@ -91,8 +97,18 @@ def main():
     pp = stats.pre_post(bb)
     print(f"  {'model':34s} {'pre':>7s} {'post':>7s} {'diff':>7s} {'95% CI on diff':>18s}")
     for m, d in sorted(pp.items()):
+        excl = "" if d["diff_ci"][0] <= 0 <= d["diff_ci"][1] else "  <- excludes 0"
         print(f"  {m:34s} {d['pre_mean']:7.2f} {d['post_mean']:7.2f} "
-              f"{d['diff']:+7.2f}   [{d['diff_ci'][0]:+.2f}, {d['diff_ci'][1]:+.2f}]")
+              f"{d['diff']:+7.2f}   [{d['diff_ci'][0]:+.2f}, {d['diff_ci'][1]:+.2f}]{excl}")
+    if pp:
+        # The arm is assigned per model from that model's own training cutoff, so
+        # the same opinion is pre-cutoff for one model and post-cutoff for
+        # another. Report the range rather than one model's counts.
+        pre = [d["n_pre_docs"] for d in pp.values()]
+        post = [d["n_post_docs"] for d in pp.values()]
+        print(f"  (documents per model: {min(pre)}-{max(pre)} pre-cutoff, "
+              f"{min(post)}-{max(post)} post-cutoff -- each model's own cutoff date "
+              "decides;\n   intervals resample documents within each arm)")
     n_zero = sum(1 for d in pp.values() if d["diff_ci"][0] <= 0 <= d["diff_ci"][1])
     print("  A model cannot have memorized an opinion filed after its cutoff.")
     print(f"  {n_zero} of {len(pp)} intervals include zero, at widths near one token,")

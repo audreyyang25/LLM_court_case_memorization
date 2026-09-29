@@ -6,10 +6,10 @@ those artifacts can be rebuilt, or the pipeline re-pointed at a new run.
 
     python regenerate/export.py --src /path/to/datasets
 
+The upstream project can be downloaded here: https://github.com/audreyyang25/FinAITrainingData.git.
 --src must be the upstream `datasets` directory -- the one holding scores/,
 logprobs/ and controls_qa.csv. In the original project that is
-"Data Collection and Training Material Generation/datasets", NOT
-"Memorization/datasets", which holds only build scripts.
+"Data Collection and Training Material Generation/datasets".
 """
 import argparse, csv, gzip, glob, os, json, collections
 import sys
@@ -34,11 +34,6 @@ os.makedirs(OUT, exist_ok=True)
 KEEP = ["corpus", "work", "case_id", "qid", "tier", "arm", "model", "model_cutoff",
         "longest_run", "prefix_tokens", "rouge_l", "token_f1", "exact_match",
         "gold_tokens", "pred_tokens", "refusal", "unknown", "nonanswer", "errored",
-        # Joined from predictions/. The scorer's taxonomy files a blocked
-        # response as "empty", which hides policy declination: 240 of the 549
-        # empties carry finish=content_filter with the provider's own refusal
-        # flag set. Without these two columns the disposition table understates
-        # policy refusal threefold, and does so differently per corpus.
         "finish", "provider_refused"]
 
 ctl_work = {}
