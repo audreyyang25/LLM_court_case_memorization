@@ -265,18 +265,31 @@ The chance level is **measured, not assumed**: each gold answer is scored agains
 *other cases'* gold answers, which shares register and boilerplate but has no
 shared provenance.
 
-Pooled over ~400 pairs, computed separately per corpus because the two have
-different mean answer lengths:
+Pairs are drawn by `score_answers.py --null` (`null_distribution`, `seed=0`).
+Answers are bucketed by `qid`, so **a pair is always the same question asked of
+two different cases** — never two different questions, which would compare
+unlike things. Buckets with fewer than 3 answers are skipped; the remainder each
+contribute `400 // n_qids` pairs, so the budget is **stratified equally across
+questions**, not weighted by how many cases answer each one. Each pair is an
+independent `random.sample(rs, 2)`, so a pair can recur.
 
-| Corpus | `longest_run` | `rouge_l` | mean gold tokens |
-|---|---|---|---|
-| Court opinions (v2 set) | **1.0** | 0.112 | 19.1 |
-| Controls | **1.0** | 0.080 | 22.8 |
+Computed separately per corpus, because the two have different mean answer
+lengths and different question counts:
 
-**Every reported score should be read against `longest_run = 1.0`**, not zero.
-Per-question floors are also stored and vary with answer length. (An earlier
-figure of 0.9 was measured on the v1 question set, which still contained
-Q05/Q06/Q15/Q18; it is superseded.)
+| Corpus | qids | pairs/qid | pairs | distinct | `longest_run` | `rouge_l` | mean gold tokens |
+|---|---|---|---|---|---|---|---|
+| Court opinions (v2 set) | 20 | 20 | **400** | 399 | **0.9** | 0.11 | 19.5 |
+| Controls | 11 | 36 | **396** | 359 | **1.0** | 0.08 | 23.1 |
+
+The odd 396 is the floor division, not discarded pairs: `400 // 11 = 36`.
+Controls repeat 37 of their 396 draws because each bucket holds only 18-19
+answers (~160 possible pairs) — their effective n is below 396, which is one
+more reason the court figure is the one to quote.
+
+**Every reported score should be read against `longest_run` ≈ 1 token**, not
+zero. Per-question floors are also stored and vary with answer length: the two
+long-answer questions (Q14, Q16, ~36-60 gold tokens) floor at 1.4-1.5, while
+short-answer questions sit at 0.8-0.9.
 
 ### 5.4 Two distinct nulls
 
@@ -290,14 +303,14 @@ conflated, but they bound different things:
 
 The second catches a failure the first structurally cannot: a model emitting
 plausible English that matches any plausible English target, i.e. the metric
-rewarding style rather than sequence. Both landing at ~1.0 means the model adds
+rewarding style rather than sequence. Both landing at ~1 token means the model adds
 no spurious overlap beyond what the corpus already guarantees.
 
 The scrambled control is the weaker estimate and should be quoted with its n.
 Claude attempted **0 of 81** scrambled items and GPT-5 only 7 — models correctly
 detect destroyed sequence and abstain — so Gemini's 27 attempts carry most of it.
 Direction is unambiguous (max run 2 tokens, 95% of items in the 0-2 bin), but the
-~400-pair gold-vs-gold null is the robust number.
+400-pair gold-vs-gold null is the robust number.
 
 ---
 
