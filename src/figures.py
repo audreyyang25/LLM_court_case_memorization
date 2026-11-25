@@ -1,12 +1,12 @@
-"""figures.py -- the five figures in the paper.
+"""figures.py: the five figures in the paper.
 
   fig1_corpus_ladder.png  mean contiguous tokens by corpus, against the measured floor
-  fig2_distributions.png  the bimodality test -- what a mean cannot show
+  fig2_distributions.png  distribution of run lengths per corpus
   fig3_prepost.png        pre- vs post-cutoff difference per model, with CIs
   fig4_whitebox.png       teacher-forced replication on open weights
   fig5_hotspots.png       adjudication of the 399 highest-probability spans
 
-Positive controls are blue, the negative control grey, the target orange.
+Colors: positive controls blue, negative control grey, court opinions orange.
 """
 
 from __future__ import annotations
@@ -40,10 +40,8 @@ def _short_model(m):
 
 
 def fig_corpus_ladder(bb, floor, out):
-    """The instrument-validation figure: does the harness detect anything?
-
-    A null on obscure legal text looks exactly like a broken harness, so the
-    positive controls are load-bearing rather than decorative.
+    """Mean run length per corpus vs. the floor. Checks that the harness
+    detects memorization on the controls.
     """
     cs = stats.corpus_summary(bb)
     works = [w for w in load.CORPUS_ORDER if w in cs]
@@ -58,8 +56,7 @@ def fig_corpus_ladder(bb, floor, out):
 
     fl = floor["controls"]["longest_run"]
     ax.axvline(fl, color=C_FLOOR, ls="--", lw=1.4, zorder=0)
-    # y is inverted below, so -0.62 puts this above the top bar rather than
-    # under the x-axis label.
+    # y axis is inverted below, so -0.62 is above the top bar.
     ax.text(fl + 0.5, -0.62, f"measured floor = {fl:.1f} tokens",
             color=C_FLOOR, fontsize=8.5, va="center")
 
@@ -87,11 +84,8 @@ def fig_corpus_ladder(bb, floor, out):
 
 
 def fig_distributions(bb, out):
-    """Memorization is bimodal; the court-opinion distribution has no upper mode.
-
-    "Half the items at 15 tokens" and "every item at 7.5" give
-    the same average and mean opposite things about whether a passage is carried
-    in the weights.
+    """Histogram of run lengths per corpus. Memorized text should show a
+    second mode at high values; the mean alone wouldn't show this.
     """
     bins = (0, 2, 4, 6, 8, 10, 15, 20, 30, 1e9)
     labels = ["0-2", "2-4", "4-6", "6-8", "8-10", "10-15", "15-20", "20-30", "30+"]
@@ -105,9 +99,8 @@ def fig_distributions(bb, out):
         ax.bar(np.arange(len(labels)), frac, color=CORPUS_COLOR[w])
         ax.set_xticks(np.arange(len(labels)))
         ax.set_xticklabels(labels, fontsize=7.6, rotation=45, ha="right")
-        # Computed from the same strict ">10" predicate the tables use, not by
-        # summing the bins -- the 10-15 bin is half-open and includes exactly 10,
-        # which would disagree with the reported figure by a couple of points.
+        # Use the same strict >10 as the tables. Summing bins would include
+        # exactly 10 (the 10-15 bin is half-open) and differ slightly.
         over = cs[w]["frac_over_10"]
         ax.set_title(f"{load.CORPUS_LABEL[w]}  ({load.CORPUS_ROLE[w]})\n"
                      f"n={n:,}   {over:.0%} above 10 tokens", fontsize=9.5)
@@ -124,11 +117,10 @@ def fig_distributions(bb, out):
 
 
 def fig_prepost(bb, out):
-    """The precise null: pre-cutoff minus post-cutoff recall, per model.
+    """Pre-cutoff minus post-cutoff mean, per model, with clustered CIs.
 
-    Width is what makes this a null rather than an absence of evidence. An
-    effect the size of the novel controls could not have been missed at these
-    interval widths.
+    The intervals are narrow enough that an effect the size of the novel
+    controls would show up.
     """
     pp = stats.pre_post(bb)
     models = sorted(pp, key=lambda m: pp[m]["diff"])
@@ -159,7 +151,7 @@ def fig_prepost(bb, out):
 
 
 def fig_whitebox(lp, out):
-    """Teacher-forced replication: the metric the black-box probe cannot reach."""
+    """Teacher-forced probabilities on Llama 3.1 (needs logits, so open weights only)."""
     ls = stats.logprob_summary(lp)
     order = [("Llama-3.1-8B", "base"), ("Llama-3.1-8B-Instruct", "instruct"),
              ("Llama-3.1-70B", "base"), ("Llama-3.1-70B-Instruct", "instruct")]
@@ -191,7 +183,7 @@ def fig_whitebox(lp, out):
 
 
 def fig_hotspots(hs, out):
-    """What the top of the distribution actually contains."""
+    """Hand labels for the 399 highest-probability spans."""
     h = stats.hotspot_summary(hs)
     pretty = {
         "in_document_repetition": "repeated elsewhere in the same document",

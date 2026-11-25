@@ -1,9 +1,8 @@
-"""verify.py -- re-score the raw predictions and compare against the committed scores.
+"""verify.py: re-score the raw predictions and compare against the committed scores.
 
-`data/` holds scored artifacts; `data/raw/` holds the prompts, gold continuations
-and verbatim model outputs they were computed from. This walks that chain with an
-INDEPENDENT implementation of the headline metric and asserts the result matches,
-so the paper's central number does not rest on the upstream scorer being right:
+`data/` has the scored files; `data/raw/` has the prompts, gold continuations
+and model outputs they came from. This recomputes the main metric with a
+separate implementation and checks that it matches:
 
     source document -> prompt + gold continuation -> model output
                     -> longest_run -> blackbox_scores.csv.gz
@@ -12,14 +11,13 @@ Four checks:
 
   1. COVERAGE     every scored row has a prediction and a question behind it
   2. RESCORE      recompute longest_run from the raw text and compare per row
-  3. NO LEAKAGE   no prompt contains its own gold continuation -- the failure
-                  mode that would make recall trivially high
+  3. NO LEAKAGE   no prompt contains its own gold continuation
   4. DISPOSITION  the attempt flags are consistent with the prediction strings
 
     python regenerate/verify.py
 
-Exits non-zero if any check fails. Needs only data/ and data/raw/ -- no upstream
-project, no network, no API key.
+Exits non-zero if any check fails. Needs only data/ and data/raw/ (no upstream
+project, network, or API key).
 """
 
 import argparse
@@ -38,15 +36,11 @@ ROOT = os.path.dirname(HERE)
 DATA = os.path.join(ROOT, "data")
 RAW = os.path.join(DATA, "raw")
 
-# Typographic folding, applied before tokenizing. Models and source documents
-# disagree about quote, dash and space characters constantly, and without this
-# the metric would score typography rather than sequence.
+# Normalize quotes, dashes and spaces before tokenizing, since models and
+# sources often use different characters for these.
 #
-# The section sign is deliberately spelled out rather than dropped. Legal text
-# writes a citation as both "section 1132" and "§ 1132", and a metric that
-# treated those as different tokens would understate recall on exactly the
-# statutory citations that dominate this corpus -- 4 rows in this dataset turn
-# on it.
+# The section sign is mapped to "section" instead of dropped, because citations
+# appear both as "section 1132" and "§ 1132" (affects 4 rows).
 PUNCT_MAP = {
     "‘": "'", "’": "'", "‚": "'", "‛": "'",
     "“": '"', "”": '"', "„": '"',
@@ -72,11 +66,10 @@ def tokens(s):
 
 
 def longest_run(pred, gold):
-    """Longest contiguous run of matching tokens -- the headline metric.
+    """Longest contiguous run of matching tokens (the main metric).
 
-    Contiguity is the point. A high token-overlap score can be produced by
-    scattered function words, which is exactly what formulaic legal prose
-    guarantees; a long contiguous run cannot.
+    Token overlap can be high from scattered function words in formulaic legal
+    text; a long contiguous run is harder to get by chance.
     """
     a, b = tokens(pred), tokens(gold)
     if not a or not b:
@@ -97,8 +90,7 @@ def check_raw_present():
     if missing:
         print(f"data/raw/ is missing {missing}.")
         print('Rebuild it with:  python regenerate/export_raw.py --src "/path/to/.../datasets"')
-        print("\nNote: the raw layer is optional. The paper reproduces from data/ alone;")
-        print("these files exist so the measurement can be audited, not re-run.")
+        print("\nNote: data/raw/ is optional; src/run_all.py only needs data/.")
         sys.exit(2)
 
 
@@ -131,9 +123,8 @@ def main():
               f"gold continuation and a verbatim model output")
 
     # ---- 3. NO LEAKAGE -----------------------------------------------------
-    # If a prompt contained its own gold continuation, a model could score
-    # perfectly by copying rather than recalling. The paper reports one early
-    # question that leaked this way and was excluded; this confirms none remain.
+    # A prompt containing its own answer could be copied. One early question
+    # had this problem and was dropped; check that none remain.
     leaked = []
     for q in questions.values():
         gold, prompt = normalize(q.get("answer", "")), normalize(q.get("prompt", ""))
@@ -181,13 +172,9 @@ def main():
               "independent implementation, all matching the committed longest_run")
 
     # ---- 4. DISPOSITION ----------------------------------------------------
-    # The attempt predicate decides which rows enter every mean in the paper, so
-    # it has to be checked against the strings it claims to describe.
-    #
-    # This imports the predicate from src.load rather than restating it. A
-    # verifier carrying its own copy would pass while the loader was wrong,
-    # which is exactly what happened when this check was first written: both had
-    # the same bug and agreed with each other.
+    # Check the attempt flag against the prediction strings. Uses the predicate
+    # from src.load directly; an earlier version had its own copy with the same
+    # bug as the loader, so the check passed when it shouldn't have.
     sys.path.insert(0, ROOT)
     from src.load import load_blackbox                        # noqa: E402
 
@@ -198,8 +185,7 @@ def main():
         if r and r["is_attempt"] and not (p.get("prediction") or "").strip():
             empty_attempts += 1
 
-    # The taxonomy column and the derived booleans must agree, or the two could
-    # disagree silently and a reader would not know which the means used.
+    # The nonanswer column and the derived booleans should agree.
     inconsistent = sum(
         1 for r in scored
         if (r["nonanswer"] == "refusal_policy") != (r["refusal"] == "1")
@@ -226,7 +212,7 @@ def main():
         for f in failures:
             print(f"  - {f}")
         sys.exit(1)
-    print("All checks passed: the committed scores derive from data/raw/.")
+    print("All checks passed.")
 
 
 if __name__ == "__main__":

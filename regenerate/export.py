@@ -1,14 +1,13 @@
-"""export.py -- rebuild ../data/ from a completed upstream run.
+"""export.py: rebuild ../data/ from a completed upstream run.
 
-This is the ONLY file in the repository that needs the upstream project. The
-analysis in ../src/ runs entirely from the committed artifacts; this exists so
-those artifacts can be rebuilt, or the pipeline re-pointed at a new run.
+Only this file needs the upstream project. The analysis in ../src/ runs from
+the committed files; this is for rebuilding them or pointing at a new run.
 
     python regenerate/export.py --src /path/to/datasets
 
 The upstream project can be downloaded here: https://github.com/audreyyang25/FinAITrainingData.git.
---src must be the upstream `datasets` directory -- the one holding scores/,
-logprobs/ and controls_qa.csv. In the original project that is
+--src must be the upstream `datasets` directory (the one holding scores/,
+logprobs/ and controls_qa.csv). In the original project that is
 "Data Collection and Training Material Generation/datasets".
 """
 import argparse, csv, gzip, glob, os, json, collections
@@ -75,9 +74,8 @@ for p in sorted(glob.glob(f"{SRC}/logprobs/logprobs__*.csv")):
     model = parts[3]
     variant = "instruct" if model.endswith("-Instruct") else "base"
     for x in csv.DictReader(open(p)):
-        # `work` names the CORPUS, not the document: court rows carry their own
-        # case_id in the source file's work column, which would give 106 distinct
-        # "works" and make every corpus-level grouping below wrong.
+        # `work` should be the corpus. Court rows have their case_id in the
+        # source's work column, which would give 106 separate "works".
         if corpus == "court_opinions":
             base = "court_opinion"
         else:

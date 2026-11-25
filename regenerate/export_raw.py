@@ -1,30 +1,26 @@
-"""export_raw.py -- export the full audit chain from a completed upstream run.
+"""export_raw.py: export the raw prompts and outputs from a completed upstream run.
 
-`export.py` writes the scored artifacts the analysis consumes. This writes the
-RAW layers behind them, so a reader can check the measurement rather than only
-re-run the statistics:
+`export.py` writes the scored files the analysis uses. This writes the raw data
+behind them so the scoring can be checked:
 
     data/raw/questions.csv.gz     every prompt and gold continuation, for court
                                   opinions and controls alike
     data/raw/predictions.csv.gz   what each model actually produced, verbatim
 
-Together with `verify.py` these close the chain:
+With `verify.py` this covers:
 
     source document -> prompt + gold continuation -> model output
                     -> longest_run -> blackbox_scores.csv.gz
 
-`verify.py` re-scores the raw predictions with an independent implementation of
-the overlap metric and compares against the committed scores, so the headline
-number does not rest on the upstream scorer being correct.
+`verify.py` re-scores the raw predictions with a separate implementation of
+the metric and compares against the committed scores.
 
     python regenerate/export_raw.py --src "/path/to/.../datasets"
 
-Roughly 2 MB gzipped. Not needed to reproduce the paper -- `src/run_all.py` uses
-only the scored artifacts -- but needed to audit it.
+About 2 MB gzipped. `src/run_all.py` doesn't need it; it's for checking the scores.
 
-Redistribution: court opinions are US government edicts and uncopyrightable;
-the Constitution is likewise; The Great Gatsby entered the US public domain in
-2021. Nothing here is restricted.
+Redistribution: court opinions and the Constitution are US government works and
+not copyrighted; The Great Gatsby entered the US public domain in 2021.
 """
 
 import argparse
@@ -68,9 +64,8 @@ def _work_of(corpus, case_id):
 def export_questions(args):
     """Prompts and gold continuations.
 
-    This is what lets a reader check the two construction rules the paper names:
-    that the prompt header does not leak the answer it asks for, and that the
-    nested-prefix family holds the target byte-identical while growing the prefix
+    Used to check that prompts don't contain their answers, and that the
+    nested-prefix questions keep the same target while the prefix grows
     backward from a fixed break point.
     """
     path = os.path.join(args.out, "questions.csv.gz")
@@ -91,13 +86,10 @@ def export_questions(args):
 
 
 def export_predictions(args):
-    """Raw model outputs, exactly as returned.
+    """Raw model outputs, as returned.
 
-    The disposition flags in the scored artifact are derived from these strings.
-    Shipping the strings is what makes the attempt predicate falsifiable -- the
-    paper reports two earlier versions of it that produced wrong numbers
-    silently, and a reader should be able to check the current one rather than
-    trust it.
+    The attempt/refusal flags in the scored file are derived from these, so
+    including them lets the flags be checked.
     """
     path = os.path.join(args.out, "predictions.csv.gz")
     n = 0

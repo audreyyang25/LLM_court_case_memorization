@@ -1,11 +1,11 @@
-"""run_all.py -- reproduce every number and figure in the paper.
+"""run_all.py: regenerate all numbers and figures in the paper.
 
     python -m src.run_all                # everything
     python -m src.run_all --no-figures   # numbers only (no matplotlib needed)
 
-Writes results/summary.json and results/figures/*.png. Console output is a
-summary; the JSON is the citable record. Bootstraps are seeded, so repeated runs
-agree exactly. Runs in about ten seconds.
+Writes results/summary.json and results/figures/*.png. The console output is a
+short summary; the full numbers are in the JSON. Bootstraps are seeded, so
+reruns give identical output. Takes about ten seconds.
 """
 
 from __future__ import annotations
@@ -46,7 +46,7 @@ def main():
           f"({floor['court_opinions']['n_pairs']} gold-vs-other-gold pairs)")
     print(f"  controls        {ctl_floor:.1f} contiguous tokens "
           f"({floor['controls']['n_pairs']} pairs)")
-    print("  Every score below is read against this, not against zero.")
+    print("  Scores below should be compared to this floor.")
 
     print("\n" + "=" * 78)
     print("  2. BLACK-BOX PROBE, POOLED OVER 7 MODELS")
@@ -62,18 +62,17 @@ def main():
               f"{d['n_documents']:5d} {d['n_attempts']:9d} {d['attempt_rate']:6.0%} "
               f"{d['mean']:6.2f} [{d['ci'][0]:5.2f},{d['ci'][1]:5.2f}] "
               f"{d['frac_over_10']:8.1%} {d['design_effect']:5.1f}")
-    print("\n  Intervals resample DOCUMENTS, not items: several questions are asked of")
-    print("  each source text and share its wording, so items are not independent.")
-    print(f"  On court opinions that inflates the interval {(cs['court_opinion']['ci'][1]-cs['court_opinion']['ci'][0]) / (cs['court_opinion']['ci_item_level'][1]-cs['court_opinion']['ci_item_level'][0]):.1f}x"
+    print("\n  CIs resample documents, since questions from the same text are correlated.")
+    print(f"  On court opinions this widens the interval {(cs['court_opinion']['ci'][1]-cs['court_opinion']['ci'][0]) / (cs['court_opinion']['ci_item_level'][1]-cs['court_opinion']['ci_item_level'][0]):.1f}x"
           f" (ICC {cs['court_opinion']['icc']:.3f}, effective n"
           f" {cs['court_opinion']['n_effective']:.0f} of {cs['court_opinion']['n_attempts']:,}).")
 
-    print(f"\n  The instrument works: {cs['constitution']['mean']:.1f} contiguous tokens on the"
-          f" Constitution,\n  {cs['gatsby']['mean']:.1f} on a memorized novel, and "
-          f"{cs['gatsby_shuf']['mean']:.2f} on the same novel scrambled --\n"
-          f"  a negative control sitting at the {ctl_floor:.1f}-token floor. Court opinions sit at "
-          f"{cs['court_opinion']['mean']:.2f},\n  and {cs['court_opinion']['frac_over_10']:.1%} "
-          f"of items exceed 10 tokens against {cs['gatsby']['frac_over_10']:.0%} for the novel.")
+    print(f"\n  Controls: {cs['constitution']['mean']:.1f} tokens on the Constitution,"
+          f" {cs['gatsby']['mean']:.1f} on Gatsby,\n"
+          f"  {cs['gatsby_shuf']['mean']:.2f} on scrambled Gatsby (floor {ctl_floor:.1f}). "
+          f"Court opinions: {cs['court_opinion']['mean']:.2f},\n"
+          f"  with {cs['court_opinion']['frac_over_10']:.1%} of items above 10 tokens "
+          f"(Gatsby: {cs['gatsby']['frac_over_10']:.0%}).")
 
     print("\n" + "=" * 78)
     print("  3. PER MODEL")
@@ -101,19 +100,15 @@ def main():
         print(f"  {m:34s} {d['pre_mean']:7.2f} {d['post_mean']:7.2f} "
               f"{d['diff']:+7.2f}   [{d['diff_ci'][0]:+.2f}, {d['diff_ci'][1]:+.2f}]{excl}")
     if pp:
-        # The arm is assigned per model from that model's own training cutoff, so
-        # the same opinion is pre-cutoff for one model and post-cutoff for
-        # another. Report the range rather than one model's counts.
+        # Arms depend on each model's cutoff, so document counts vary by model.
         pre = [d["n_pre_docs"] for d in pp.values()]
         post = [d["n_post_docs"] for d in pp.values()]
         print(f"  (documents per model: {min(pre)}-{max(pre)} pre-cutoff, "
-              f"{min(post)}-{max(post)} post-cutoff -- each model's own cutoff date "
-              "decides;\n   intervals resample documents within each arm)")
+              f"{min(post)}-{max(post)} post-cutoff, by each model's cutoff;\n"
+              "   intervals resample documents within each arm)")
     n_zero = sum(1 for d in pp.values() if d["diff_ci"][0] <= 0 <= d["diff_ci"][1])
-    print("  A model cannot have memorized an opinion filed after its cutoff.")
-    print(f"  {n_zero} of {len(pp)} intervals include zero, at widths near one token,")
-    print("  against a positive-control effect of ~20 tokens. This is a precise")
-    print("  null, not an absent test.")
+    print(f"  {n_zero} of {len(pp)} intervals include zero (widths ~1 token;")
+    print("  positive-control effect is ~20 tokens).")
 
     print("\n" + "=" * 78)
     print("  5. TEACHER-FORCED LOGPROBS (white-box replication, Llama 3.1)")
@@ -129,21 +124,20 @@ def main():
             cells.append(f"{d['mean_p_geomean']:.3f}" if d else "-")
         print(f"  {m + ' (' + v + ')':34s} " + "".join(f"{c:>15s}" for c in cells))
     print("  cell = mean per-token geometric-mean probability of the TRUE continuation")
-    print("  The ordering matches the black-box probe, which rules out the")
-    print("  possibility that sampling was missing what logprobs would reveal.")
+    print("  Same ordering as the black-box probe.")
 
     print("\n" + "=" * 78)
-    print("  6. THE TAIL IS BOILERPLATE")
+    print("  6. HIGHEST-PROBABILITY SPANS")
     print("=" * 78)
     hsum = stats.hotspot_summary(hs)
-    print(f"  {hsum['n_spans']} highest-probability spans, adjudicated:")
+    print(f"  {hsum['n_spans']} highest-probability spans, hand-labeled:")
     for k, v in sorted(hsum["verdicts"].items(), key=lambda kv: -kv[1]):
         print(f"    {v:4d}  {k}")
     print(f"\n  memorization candidates: {hsum['n_candidates']} "
           f"({hsum['candidate_rate']:.1%})")
     print(f"  spans from POST-cutoff opinions: {hsum['post_cutoff_spans']} of "
           f"{hsum['n_spans']} ({hsum['post_cutoff_spans'] / hsum['n_spans']:.0%})"
-          f" -- these cannot have been memorized at all")
+          f", which can't have been memorized")
     print("\n  what the spans are, by content:")
     for k, v in sorted(hsum["categories_near"].items(), key=lambda kv: -kv[1]):
         print(f"    {v:4d}  {k}")

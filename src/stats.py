@@ -1,20 +1,14 @@
-"""stats.py -- the summaries behind every claim in the paper.
+"""stats.py: summary statistics used in the paper.
 
-The central quantity is `longest_run`: the longest contiguous run of tokens the
-model reproduced from the true continuation. It is read against a MEASURED floor
-(see load.load_floor), never against zero.
+The main metric is `longest_run`, the longest contiguous run of tokens the model
+reproduced from the true continuation. It is compared to the measured floor
+(load.load_floor), not to zero.
 
-Two things this module is careful about, both of which have silently produced
-wrong numbers in earlier versions of this pipeline:
-
-  * Means are taken over ATTEMPTS only, and the attempt predicate is explicit.
-    Models decline at wildly different rates, so a mean over "answers" is a mean
-    over a self-selected, model-specific subset.
-
-  * The distribution matters more than the mean. Real memorization is bimodal --
-    the model either has the passage or it does not -- so a corpus that is truly
-    memorized shows an upper mode, and a mean alone cannot distinguish "half the
-    items at 15 tokens" from "every item at 7.5".
+Notes:
+  * Means are over attempts only. Models decline at very different rates.
+  * We also look at the distribution, since memorization tends to be bimodal
+    (the model either has the passage or doesn't) and the mean alone can't
+    show that.
 """
 
 from __future__ import annotations
@@ -31,19 +25,14 @@ def _mean(xs):
 
 
 def bootstrap_ci(xs, n_boot=2000, seed=0, alpha=0.05, clusters=None):
-    """Percentile bootstrap CI for a mean. Seeded, so it reproduces exactly.
+    """Seeded percentile bootstrap CI for a mean.
 
-    `clusters` is a parallel sequence of group ids -- here, the source document.
-    When given, the resampling draws whole DOCUMENTS with replacement rather
-    than individual items, which is the correct unit: several questions are
-    asked of each opinion and they share its text, so items within a document
-    are not independent draws.
-
-    The difference is not cosmetic. Measured on the court-opinion arm, the
-    intraclass correlation by document is 0.057 with a mean cluster size of 128,
-    giving a design effect near 8 -- an effective sample of roughly 1,600 rather
-    than 13,533. Item-level resampling therefore reports intervals about three
-    times too narrow. Every interval in the paper is the clustered one.
+    `clusters` gives a group id (source document) per item. If set, whole
+    documents are resampled instead of items, since questions from the same
+    opinion are correlated. On court opinions the ICC is 0.057 with mean
+    cluster size 128 (design effect ~8, effective n ~1,600 of 13,533), so
+    item-level intervals are about 3x too narrow. The paper uses the clustered
+    intervals.
     """
     import random
     xs = list(xs)
@@ -77,11 +66,9 @@ def bootstrap_ci(xs, n_boot=2000, seed=0, alpha=0.05, clusters=None):
 
 
 def design_effect(xs, clusters):
-    """Variance inflation from clustering, and the effective sample size.
+    """Design effect and effective sample size from clustering.
 
-    deff = 1 + (mean cluster size - 1) * ICC. Reported so a reader can see how
-    much the clustered intervals owe to the correlation rather than taking the
-    wider numbers on faith.
+    deff = 1 + (mean cluster size - 1) * ICC.
     """
     grouped = defaultdict(list)
     for x, c in zip(xs, clusters):
@@ -128,7 +115,7 @@ def by_corpus_model(rows, metric="longest_run"):
 
 
 def corpus_summary(rows, metric="longest_run"):
-    """Pooled over models, per corpus -- the headline table."""
+    """Per-corpus summary pooled over models (main table)."""
     g = defaultdict(list)
     doc = defaultdict(list)
     tot = Counter()
@@ -177,10 +164,9 @@ def histogram(rows, work, bins=(0, 2, 4, 6, 8, 10, 15, 20, 30, 1e9), metric="lon
 def pre_post(rows, metric="longest_run"):
     """Pre- vs post-cutoff court opinions, per model.
 
-    A model cannot have memorized an opinion filed after its training cutoff, so
-    the post-cutoff arm is what verbatim text it produces with zero knowledge of
-    the case. If pre-cutoff recall does not exceed it, nothing was memorized that
-    was not already reachable from the statutes and boilerplate quoted inside.
+    Opinions filed after a model's training cutoff can't have been memorized,
+    so the post-cutoff mean is a baseline. If the pre-cutoff mean isn't higher,
+    there's no evidence of memorization beyond quoted statutes and boilerplate.
     """
     g = defaultdict(lambda: defaultdict(list))
     for r in rows:
@@ -199,9 +185,8 @@ def pre_post(rows, metric="longest_run"):
         post = [v for b in post_d.values() for v in b]
         diff = _mean(pre) - _mean(post)
 
-        # CI on the difference, resampling DOCUMENTS within each arm
-        # independently. Item-level resampling here reports intervals roughly
-        # 1.5x too narrow, because several questions share each opinion.
+        # CI on the difference, resampling documents within each arm
+        # (item-level intervals here are ~1.5x too narrow).
         import random
         rng = random.Random(1)
         pb, qb = list(pre_d.values()), list(post_d.values())
@@ -226,24 +211,16 @@ def pre_post(rows, metric="longest_run"):
 
 
 def disposition(rows):
-    """Per-model response disposition on each corpus.
+    """Per-model response categories on each corpus.
 
-    The distinction that matters is POLICY versus EPISTEMIC declination, and it
-    is not the same as refusal versus unknown. A policy declination is a trained
-    restriction that would suppress measurable memorization; an epistemic
-    declination IS the measurement. Conflating them makes a well-behaved model
-    look unmemorized.
+    Separates policy refusals (the model won't answer, which could hide
+    memorization) from epistemic declines (the model says it doesn't know).
     """
-    # Read the taxonomy column directly. The `refusal` / `unknown` / `errored`
-    # columns are derived from it, and a cascade over those booleans silently
-    # files EMPTY responses under "attempt" -- see load.load_blackbox.
+    # Use the `nonanswer` column directly; see load.load_blackbox.
     #
-    # "empty" is then split by finish reason, because it is not one thing. A
-    # blocked response and a response truncated by the token budget both arrive
-    # as an empty string, and only the first is a declination. Counting them
-    # together understates policy refusal roughly threefold and does so
-    # unevenly across corpora, which would misstate the one claim in the paper
-    # that rests on refusal rates.
+    # Empty responses are split by finish reason: a blocked response and one
+    # truncated by the token limit both come back empty, but only the first is
+    # a refusal. Lumping them together undercounts policy refusals ~3x.
     label = {
         "attempt": "attempt",
         "refusal_policy": "policy_refusal",
@@ -273,9 +250,8 @@ def disposition(rows):
 def logprob_summary(lp_rows):
     """(corpus, model, variant) -> mean per-token geometric-mean probability.
 
-    This is the teacher-forced metric the black-box probe cannot access. Base
-    models are the headline condition: instruction tuning suppresses verbatim
-    reproduction, and the question is whether the model CARRIES the text.
+    Teacher-forced metric (needs logits). Base models are the main condition
+    since instruction tuning suppresses verbatim reproduction.
     """
     g = defaultdict(list)
     doc = defaultdict(list)
@@ -290,7 +266,7 @@ def logprob_summary(lp_rows):
 
 
 def hotspot_summary(hs_rows):
-    """Adjudication of the 399 highest-probability spans."""
+    """Summary of the hand labels on the 399 highest-probability spans."""
     verdicts = Counter(r["verdict"] for r in hs_rows)
     cats = Counter(r["category_near"] for r in hs_rows)
     cands = [r for r in hs_rows if r["verdict"] == "MEMORISATION_CANDIDATE"]
@@ -304,9 +280,9 @@ def hotspot_summary(hs_rows):
                         "category": r["category_near"],
                         "n_tokens": r["n_tokens"],
                         "text": r["text"][:220]} for r in cands],
-        # Post-cutoff opinions cannot have been memorized, so a high-probability
-        # span from one is proof that the metric's tail is reachable without
-        # memorization at all. The arm label is "post_cutoff_control".
+        # Post-cutoff opinions can't have been memorized, so high-probability
+        # spans from them show the tail can occur without memorization.
+        # The arm label is "post_cutoff_control".
         "post_cutoff_spans": sum(1 for r in hs_rows
                                  if r["arm"].startswith("post_cutoff")),
         "candidates_post_cutoff": sum(1 for r in hs_rows

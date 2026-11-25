@@ -1,10 +1,10 @@
 # Vendored code
 
-The analysis in `src/` needs none of this — it runs from the committed artifacts
-in `data/`. This directory exists so the *upstream* half of the pipeline can be
-re-run from a clone: re-probing new models, building questions for new documents,
-re-scoring, re-judging. Without it, `--upstream` would point at a path only the
-original author has.
+The analysis in `src/` doesn't need any of this; it runs from the committed
+artifacts in `data/`. This directory is here so the *upstream* half of the
+pipeline can be re-run from a clone: re-probing new models, building questions
+for new documents, re-scoring, re-judging. Without it, `--upstream` would point
+at a path only the original author has.
 
 ## Provenance
 
@@ -27,7 +27,7 @@ project at commit `201a786`, on 2026-09-15.
 
 ## The only modification
 
-Four of these files resolve their data root by walking three directories up from
+Four of these files find their data root by walking three directories up from
 their own location to the monorepo root:
 
 ```python
@@ -35,7 +35,7 @@ REPO = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)
 BASE = os.path.join(REPO, "Data Collection and Training Material Generation")
 ```
 
-Vendored here, that walk lands outside the repository. Each is replaced with:
+Vendored here, that walk ends up outside the repository. Each is replaced with:
 
 ```python
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -43,15 +43,15 @@ BASE = os.environ.get("MEMAUDIT_DATA") or os.path.join(REPO, "data")
 ```
 
 The replacement is marked `VENDORED PATH PATCH` in every file it touches.
-**Nothing else is changed** — no logic, no prompts, no thresholds, no scoring.
-Diff any file against the upstream original to confirm.
+Nothing else is changed (no logic, prompts, thresholds, or scoring). Diff any
+file against the upstream original to confirm.
 
 Set `MEMAUDIT_DATA` to override the root without editing anything.
 
 ## The data under `vendor/data/`
 
-The upstream tools read documents and a manifest, not just code, so those are
-here too with the same internal layout:
+The upstream tools read documents and a manifest as well as code, so those are
+included with the same internal layout:
 
 | path | contents |
 |---|---|
@@ -60,20 +60,20 @@ here too with the same internal layout:
 | `data/datasets/controls_qa.csv` | the Constitution / Gatsby / scrambled-Gatsby questions |
 | `data/crawl_manifest/case_ids.json` | captions, dockets, dates and arm labels |
 
-Court opinions are US government edicts and uncopyrightable; the Constitution
-likewise; *The Great Gatsby* entered the US public domain in 2021. Nothing here
-is restricted.
+Court opinions are US government edicts and uncopyrightable, as is the
+Constitution. *The Great Gatsby* entered the US public domain in 2021. Nothing
+here is restricted.
 
-Roughly 11 MB. The full upstream project is far larger and contains material
-unrelated to this paper — a separate reasoning-fingerprint study, a judge panel,
-and 6,064 source PDFs including law-firm memoranda and academic articles that are
-not ours to redistribute. Vendoring the seven files this paper actually uses is
-both smaller and cleaner than pointing a reader at that.
+Roughly 11 MB. The full upstream project is much larger and contains material
+unrelated to this paper: a separate reasoning-fingerprint study, a judge panel,
+and 6,064 source PDFs including law-firm memoranda and academic articles that we
+can't redistribute. Vendoring the seven files this paper uses is smaller than
+pointing a reader at all of that.
 
 ## Running against a real upstream checkout instead
 
 Every entry point takes `--upstream` (or `$1` for the shell scripts) and defaults
-to this directory. Pass a path to a genuine `Memorization/` checkout to use that
+to this directory. Pass a path to an actual `Memorization/` checkout to use that
 instead:
 
 ```bash
